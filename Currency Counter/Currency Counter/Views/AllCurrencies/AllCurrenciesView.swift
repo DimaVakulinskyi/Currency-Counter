@@ -45,6 +45,7 @@ struct AllCurrenciesView: View {
                     .padding()
             }
         }
+        .frame(maxHeight: .infinity)
         .fullScreenCover(isPresented: $showFullScreen) {
             CurrencyConverterView()
         }

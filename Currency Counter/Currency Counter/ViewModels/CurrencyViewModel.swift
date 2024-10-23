@@ -10,6 +10,7 @@ import Combine
 
 class CurrencyViewModel: ObservableObject {
     @Published var currencies: [Currency] = []
+    @Published var cachedCurrencies: [String: Currency] = [:]
     
     private var cancellables = Set<AnyCancellable>()
     private let networkService: NetworkService
@@ -31,7 +32,9 @@ class CurrencyViewModel: ObservableObject {
             }, receiveValue: { [weak self] response in
                 self?.currencies = response.quotes.map { key, value in
                     let currencyCode = String(key.dropFirst(sourceCurrency.count))
-                    return Currency(code: currencyCode, rate: value)
+                    let currency = Currency(code: currencyCode, rate: value)
+                    self?.cachedCurrencies[currencyCode] = currency
+                    return currency
                 }
             })
             .store(in: &cancellables)

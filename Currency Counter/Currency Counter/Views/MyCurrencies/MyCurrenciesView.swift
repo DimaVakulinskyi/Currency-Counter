@@ -26,7 +26,7 @@ struct MyCurrenciesView: View {
             } else if localCurrencyService.currencyCode != nil {
                 ScrollView {
                     VStack(spacing: 0) {
-                        ForEach(viewModel.currencies.filter { searchText.isEmpty ? true : favouriteCurrencyService.selectedCurrencyCodes.contains($0.code) && $0.code.localizedCaseInsensitiveContains(searchText) }) { currency in
+                        ForEach(filteredCurrencies.sorted(by: { $0.code < $1.code })) { currency in
                             ZStack {
                                 HStack {
                                     Spacer()
@@ -43,7 +43,6 @@ struct MyCurrenciesView: View {
                                     .gesture(
                                         DragGesture()
                                             .onChanged { value in
-                                                
                                                 if value.translation.width < 0 {
                                                     swipeToDeleteOffset[currency.code] = max(value.translation.width, -120)
                                                 }
@@ -66,20 +65,31 @@ struct MyCurrenciesView: View {
                         }
                     }
                 }
+                .refreshable {
+                    refreshCurrencies()
+                }
             }
         }
+        .frame(maxHeight: .infinity)
         .mainNavigationBar(title: "My Currencies", searchText: $searchText)
         .onAppear {
-            if !favouriteCurrencyService.selectedCurrencyCodes.isEmpty, let currency = localCurrencyService.currencyCode {
-                viewModel.fetchCurrencies(sourceCurrency: currency, selectedCurrencies: favouriteCurrencyService.selectedCurrencyCodes)
-            }
+            refreshCurrencies()
         }
+    }
+    
+    var filteredCurrencies: [Currency] {
+        return viewModel.currencies.filter { searchText.isEmpty ? true : favouriteCurrencyService.selectedCurrencyCodes.contains($0.code) && $0.code.localizedCaseInsensitiveContains(searchText) }
     }
     
     func deleteCurrency(_ currency: Currency) {
         favouriteCurrencyService.selectedCurrencyCodes.removeAll { $0 == currency.code }
-        if let currencyCode = localCurrencyService.currencyCode {
-            viewModel.fetchCurrencies(sourceCurrency: currencyCode, selectedCurrencies: favouriteCurrencyService.selectedCurrencyCodes)
+        viewModel.cachedCurrencies.removeValue(forKey: currency.code)
+        viewModel.currencies = viewModel.cachedCurrencies.map { $0.value }
+    }
+    
+    func refreshCurrencies() {
+        if !favouriteCurrencyService.selectedCurrencyCodes.isEmpty, let currency = localCurrencyService.currencyCode {
+            viewModel.fetchCurrencies(sourceCurrency: currency, selectedCurrencies: favouriteCurrencyService.selectedCurrencyCodes)
         }
     }
 }
