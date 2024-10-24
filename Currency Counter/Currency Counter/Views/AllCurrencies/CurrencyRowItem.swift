@@ -9,14 +9,13 @@ import SwiftUI
 
 struct CurrencyRowItem: View {
     let currency: Currency
-    let isFavourite: Bool
+    @Binding var isFavourite: Bool
     let toggleSelection: () -> Void
     
     var body: some View {
         HStack {
             Text(currency.code)
                 .font(.headline)
-                .foregroundStyle(Color.black)
             Text(String(format: "%.4f", currency.rate))
                 .foregroundColor(.secondary)
             Spacer()

@@ -23,10 +23,10 @@ struct AllCurrenciesView: View {
             if localCurrencyService.currencyCode != nil {
                 ScrollView {
                     VStack(spacing: 0) {
-                        ForEach(viewModel.currencies.filter { searchText.isEmpty ? true : $0.code.localizedCaseInsensitiveContains(searchText) }) { currency in
+                        ForEach(filteredAndSortedCurrencies()) { currency in
                             CurrencyRowItem(
                                 currency: currency,
-                                isFavourite: favouriteCurrencyService.selectedCurrencyCodes.contains(currency.code),
+                                isFavourite: .constant(favouriteCurrencyService.selectedCurrencyCodes.contains(currency.code)),
                                 toggleSelection: {
                                     toggleCurrencySelection(currency.code)
                                 }
@@ -56,6 +56,12 @@ struct AllCurrenciesView: View {
                 viewModel.fetchCurrencies(sourceCurrency: currency)
             }
         }
+    }
+    
+    func filteredAndSortedCurrencies() -> [Currency] {
+        return viewModel.currencies
+            .filter { searchText.isEmpty ? true : $0.code.localizedCaseInsensitiveContains(searchText) }
+            .sorted(by: { $0.code < $1.code })
     }
     
     func toggleCurrencySelection(_ code: String) {

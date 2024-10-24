@@ -26,7 +26,7 @@ struct MyCurrenciesView: View {
             } else if localCurrencyService.currencyCode != nil {
                 ScrollView {
                     VStack(spacing: 0) {
-                        ForEach(filteredCurrencies.sorted(by: { $0.code < $1.code })) { currency in
+                        ForEach(filteredCurrencies) { currency in
                             ZStack {
                                 HStack {
                                     Spacer()
@@ -49,11 +49,12 @@ struct MyCurrenciesView: View {
                                             }
                                             .onEnded { value in
                                                 if value.translation.width < -100 {
-                                                    withAnimation {
+                                                    withAnimation(.smooth()) {
                                                         deleteCurrency(currency)
+                                                        swipeToDeleteOffset[currency.code] = 0
                                                     }
                                                 } else {
-                                                    withAnimation {
+                                                    withAnimation(.smooth()) {
                                                         swipeToDeleteOffset[currency.code] = 0
                                                     }
                                                 }
@@ -78,7 +79,9 @@ struct MyCurrenciesView: View {
     }
     
     var filteredCurrencies: [Currency] {
-        return viewModel.currencies.filter { searchText.isEmpty ? true : favouriteCurrencyService.selectedCurrencyCodes.contains($0.code) && $0.code.localizedCaseInsensitiveContains(searchText) }
+        return viewModel.currencies
+            .filter { searchText.isEmpty ? true : favouriteCurrencyService.selectedCurrencyCodes.contains($0.code) && $0.code.localizedCaseInsensitiveContains(searchText) }
+            .sorted(by: { $0.code < $1.code })
     }
     
     func deleteCurrency(_ currency: Currency) {
